@@ -27,7 +27,9 @@ metro_areas = [
 """
 使用match/case表达式, 解构嵌套tuple
 """
-def main():
+from __future__ import annotations
+from typing import Union, Tuple, Callable
+def main() -> Callable[...]:
     print(f'{"":15} | {"latitude":>9} | {"longitude":>9}')
     for record in metro_areas:
         match record:
