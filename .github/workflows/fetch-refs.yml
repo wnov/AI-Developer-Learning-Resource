@@ -1,0 +1,30 @@
+name: Fetch refs
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - refs/fetch.sh
+      - .github/workflows/fetch-refs.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download materials
+        run: bash refs/fetch.sh all || echo "部分资料下载失败，见上方日志"
+      - name: Commit downloaded files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add refs/*.pdf 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "没有新文件"
+          else
+            git commit -m "Add reference materials fetched by refs/fetch.sh"
+            git push
+          fi
