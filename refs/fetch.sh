@@ -16,12 +16,12 @@ core=(
   "DS-L08.pdf https://www.davidsilver.uk/wp-content/uploads/2020/03/dyna.pdf"
   "DS-L09.pdf https://www.davidsilver.uk/wp-content/uploads/2020/03/XX.pdf"
   "DS-L10.pdf https://www.davidsilver.uk/wp-content/uploads/2020/03/games.pdf"
-  # CS285 讲次按当前学期编号，变动时改这里
-  "CS285-policy-gradients.pdf https://rail.eecs.berkeley.edu/deeprlcourse/deeprlcourse/static/slides/lec-5.pdf"
-  "CS285-actor-critic.pdf https://rail.eecs.berkeley.edu/deeprlcourse/deeprlcourse/static/slides/lec-6.pdf"
-  "CS285-value-functions.pdf https://rail.eecs.berkeley.edu/deeprlcourse/deeprlcourse/static/slides/lec-7.pdf"
-  "CS285-deep-q.pdf https://rail.eecs.berkeley.edu/deeprlcourse/deeprlcourse/static/slides/lec-8.pdf"
-  "CS285-advanced-pg.pdf https://rail.eecs.berkeley.edu/deeprlcourse/deeprlcourse/static/slides/lec-9.pdf"
+  # CS285 固定用 Fall 2023 存档，讲次编号不会再变
+  "CS285-policy-gradients.pdf https://rail.eecs.berkeley.edu/deeprlcourse-fa23/static/slides/lec-5.pdf"
+  "CS285-actor-critic.pdf https://rail.eecs.berkeley.edu/deeprlcourse-fa23/static/slides/lec-6.pdf"
+  "CS285-value-functions.pdf https://rail.eecs.berkeley.edu/deeprlcourse-fa23/static/slides/lec-7.pdf"
+  "CS285-deep-q.pdf https://rail.eecs.berkeley.edu/deeprlcourse-fa23/static/slides/lec-8.pdf"
+  "CS285-advanced-pg.pdf https://rail.eecs.berkeley.edu/deeprlcourse-fa23/static/slides/lec-9.pdf"
 )
 
 stage=(

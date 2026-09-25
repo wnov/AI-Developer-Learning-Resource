@@ -27,7 +27,7 @@ DS 讲次与 `graph.md` 的对应：
 | L8 | Integrating Learning and Planning | B2 |
 | L9 | Exploration and Exploitation | B4 |
 
-CS285 只需下载以下几讲的 slides（讲次每学期可能变动，以课程主页为准）：
+CS285 只需以下几讲的 slides，固定使用 Fall 2023 存档（https://rail.eecs.berkeley.edu/deeprlcourse-fa23/ ），讲次 5–9：
 
 | 主题 | 用于 | 建议文件名 |
 | --- | --- | --- |

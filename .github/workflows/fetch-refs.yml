@@ -17,6 +17,13 @@ jobs:
       - uses: actions/checkout@v4
       - name: Download materials
         run: bash refs/fetch.sh all || echo "部分资料下载失败，见上方日志"
+      - name: List slide links on course pages
+        if: always()
+        run: |
+          for page in https://www.davidsilver.uk/teaching/ https://rail.eecs.berkeley.edu/deeprlcourse-fa23/; do
+            echo "== $page"
+            curl -fsSL -m 60 -A "Mozilla/5.0" "$page" | grep -oE 'href="[^"]+\.pdf"' | sort -u || echo "无法访问"
+          done
       - name: Commit downloaded files
         run: |
           git config user.name "github-actions[bot]"
