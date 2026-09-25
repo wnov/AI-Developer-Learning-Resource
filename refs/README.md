@@ -11,7 +11,7 @@
 | 缩写 | 资料 | 获取 | 建议文件名 |
 | --- | --- | --- | --- |
 | SB | Sutton & Barto《Reinforcement Learning: An Introduction》第 2 版（2020） | 作者官网免费 PDF：http://incompleteideas.net/book/the-book-2nd.html （直链 http://incompleteideas.net/book/RLbook2020.pdf ） | `SB2.pdf` |
-| DS | David Silver UCL RL 课程（2015），10 讲 slides + 视频 | slides：https://www.davidsilver.uk/teaching/ ；视频：https://www.youtube.com/playlist?list=PLqYmG7hTraZDM-OYHWgPebj2MfCFzFObQ | `DS-L01.pdf` … `DS-L10.pdf` |
+| DS | David Silver UCL RL 课程（2015），10 讲 slides + 视频 | slides：https://www.davidsilver.uk/teaching/ （PDF 实际托管在 davidstarsilver.wordpress.com）；视频：https://www.youtube.com/playlist?list=PLqYmG7hTraZDM-OYHWgPebj2MfCFzFObQ | `DS-L01.pdf` … `DS-L10.pdf` |
 | CS285 | Berkeley CS285 Deep RL（Sergey Levine） | 课程主页：https://rail.eecs.berkeley.edu/deeprlcourse/ ；视频：https://www.youtube.com/playlist?list=PL_iWQOsE6TfX7MaC6C3HcdOf1g337dlC9 | `CS285-<主题>.pdf` |
 
 DS 讲次与 `graph.md` 的对应：
