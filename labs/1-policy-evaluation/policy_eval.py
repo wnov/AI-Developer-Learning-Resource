@@ -12,11 +12,10 @@ T   1   2   3
 不打折：γ = 1。回合制任务。
 策略 π：四个动作各 0.25 的概率。
 
-vπ(s) = E[Gt | St = s] = E[Rt+1 + γGt+1 | St = s] = E[Rt+1 + γvπ(St+1) | St = s] = ∑a π(a|s) ∑s',r p(s', r | s, a) [r + γvπ(s')] = ∑a π(a|s) ∑s' p(s' | s, a) [r(s, a, s') + γvπ(s')] = ∑a π(a|s) ∑s' p(s' | s, a) [r(s') + γvπ(s')]
+vπ(s) = E[Gt | St = s] = E[Rt+1 + γGt+1 | St = s] = E[Rt+1 + γvπ(St+1) | St = s] = ∑a π(a|s) ∑s',r p(s', r | s, a) [r + γvπ(s')] = ∑s'[∑r p(s', r | s)] [r(s, s') + γvπ(s')] = ∑s' p(s' | s) [r(s, s') + γvπ(s')]
 """
 
 STATE_SIZE = 14
-ACTION_SIZE = 4
 #       1     2     3     4     5     6     7     8     9     10    11    12    13    14
 p_s1 = [0.25, 0.25, 0.00, 0.00, 0.25, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00]
 p_s2 = [0.25, 0.25, 0.25, 0.00, 0.00, 0.25, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00]
@@ -35,8 +34,7 @@ p_s14 = [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.25, 0.00, 0.00,
 
 
 P_sn = np.array([p_s1, p_s2, p_s3, p_s4, p_s5, p_s6, p_s7, p_s8, p_s9, p_s10, p_s11, p_s12, p_s13, p_s14])
-R_sn = np.array([-1] * STATE_SIZE)
-π_a_s = np.array([[0.25] * ACTION_SIZE] * STATE_SIZE)
+R_sn = -1.0 * (P_sn != 0)
 gama = 1.0
 theta = 1e-4
 
@@ -45,10 +43,9 @@ def solve_two_array():
     while True:
         v_k1 = np.zeros(STATE_SIZE)
         for s in range(STATE_SIZE):
-            for a in range(ACTION_SIZE):
-                v_k1[s] += π_a_s[s][a] * np.sum([P_sn[s][s_] * (R_sn[s_] + gama * v_k[s_]) for s_ in range(STATE_SIZE)])
+            v_k1[s] =np.sum([P_sn[s][s_] * (R_sn[s][s_] + gama * v_k[s_]) for s_ in range(STATE_SIZE)])
 
-        if np.sum(np.abs(v_k1 - v_k)) < theta:
+        if np.sum(np.max(v_k1 - v_k)) < theta:
             break
         v_k = v_k1.copy()
     return v_k1
@@ -56,15 +53,13 @@ def solve_two_array():
 def solve_in_place():
     v_k = np.zeros(STATE_SIZE)
     while True:
-        v_k1 = v_k.copy()
+        vk_backup = v_k.copy()
         for s in range(STATE_SIZE):
-            for a in range(ACTION_SIZE):
-                v_k1[s] += π_a_s[s][a] * np.sum([P_sn[s][s_] * (R_sn[s_] + gama * v_k1[s_]) for s_ in range(STATE_SIZE)])
+            v_k[s] = np.sum([P_sn[s][s_] * (R_sn[s][s_] + gama * v_k[s_]) for s_ in range(STATE_SIZE)])
 
-        if np.sum(np.abs(v_k1 - v_k)) < theta:
+        if np.sum(np.max(v_k - vk_backup)) < theta:
             break
-
-    return v_k1
+    return v_k
 
 
 if __name__ == "__main__":
