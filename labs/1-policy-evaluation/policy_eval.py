@@ -45,7 +45,8 @@ def solve_two_array():
         for s in range(STATE_SIZE):
             v_k1[s] =np.sum([P_sn[s][s_] * (R_sn[s][s_] + gama * v_k[s_]) for s_ in range(STATE_SIZE)])
 
-        if np.sum(np.max(v_k1 - v_k)) < theta:
+        # print(np.max(v_k1 - v_k))
+        if np.max(np.abs(v_k1 - v_k)) < theta:
             break
         v_k = v_k1.copy()
     return v_k1
@@ -57,7 +58,8 @@ def solve_in_place():
         for s in range(STATE_SIZE):
             v_k[s] = np.sum([P_sn[s][s_] * (R_sn[s][s_] + gama * v_k[s_]) for s_ in range(STATE_SIZE)])
 
-        if np.sum(np.max(v_k - vk_backup)) < theta:
+        # print(np.max(v_k - vk_backup))
+        if np.max(np.abs(v_k - vk_backup)) < theta:
             break
     return v_k
 
