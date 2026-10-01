@@ -36,51 +36,119 @@ p_s15 = [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
 
 
 P_sn = np.array([p_s0, p_s1, p_s2, p_s3, p_s4, p_s5, p_s6, p_s7, p_s8, p_s9, p_s10, p_s11, p_s12, p_s13, p_s14, p_s15])
-R_sn = -1.0 * (P_sn != 0) 
-R_sn[0][0] = 0.
-R_sn[15][15] = 0.
-gama = 1.0
-theta = 1e-4
+R_sn = -1.0 * (P_sn != 0)
 
-def solve_two_array():
+def solve_two_array(θ=1e-4, γ=1.0, P_sn=P_sn, R_sn=R_sn, STATE_SIZE=STATE_SIZE, T_self_reword=0, max_round=10000):
+    R_sn[0, 0] = T_self_reword
+    R_sn[STATE_SIZE-1, STATE_SIZE-1] = T_self_reword
     v_k = np.zeros(STATE_SIZE)
     i = 0
     while True:
         i+=1
         v_k1 = np.zeros(STATE_SIZE)
         for s in range(STATE_SIZE):
-            v_k1[s] =np.sum([P_sn[s][s_] * (R_sn[s][s_] + gama * v_k[s_]) for s_ in range(STATE_SIZE)])
+            v_k1[s] =np.sum([P_sn[s][s_] * (R_sn[s][s_] + γ * v_k[s_]) for s_ in range(STATE_SIZE)])
 
         # print(np.max(v_k1 - v_k))
-        if np.max(np.abs(v_k1 - v_k)) < theta:
+        if np.max(np.abs(v_k1 - v_k)) < θ or i >= max_round:
             break
         v_k = v_k1.copy()
     return v_k1, i
 
-def solve_in_place():
+def solve_in_place(θ=1e-4, γ=1.0, P_sn=P_sn, R_sn=R_sn, STATE_SIZE=STATE_SIZE, T_self_reword=0, max_round=10000, reverse=False):
+    R_sn[0, 0] = T_self_reword
+    R_sn[STATE_SIZE-1, STATE_SIZE-1] = T_self_reword
     v_k = np.zeros(STATE_SIZE)
     i = 0
     while True:
         i += 1
         vk_backup = v_k.copy()
-        for s in range(STATE_SIZE):
-            v_k[s] = np.sum([P_sn[s][s_] * (R_sn[s][s_] + gama * v_k[s_]) for s_ in range(STATE_SIZE)])
+        if not reverse:
+            for s in range(STATE_SIZE):
+                v_k[s] = np.sum([P_sn[s][s_] * (R_sn[s][s_] + γ * v_k[s_]) for s_ in range(STATE_SIZE)])
+        else:
+            for s in range(STATE_SIZE-1, -1, -1):
+                v_k[s] = np.sum([P_sn[s][s_] * (R_sn[s][s_] + γ * v_k[s_]) for s_ in range(STATE_SIZE)])
 
         # print(np.max(v_k - vk_backup))
-        if np.max(np.abs(v_k - vk_backup)) < theta:
+        if np.max(np.abs(v_k - vk_backup)) < θ or i >= max_round:
             break
     return v_k, i
 
-print(P_sn.shape, STATE_SIZE)
-R = np.array([-1] * STATE_SIZE)
-def solve_matric():
-    return np.linalg.solve(np.eye(STATE_SIZE - 2)- P_sn[1:-1, 1:-1], R[1:-1])
+def solve_matric(γ=1.0, P_sn=P_sn, STATE_SIZE=STATE_SIZE, T_self_reword=0):
+    R = np.array([-1.] * STATE_SIZE)
+    V = np.array([0.] * STATE_SIZE)
+    R[0] = T_self_reword
+    R[STATE_SIZE-1] = T_self_reword
+    if γ==1.0 and T_self_reword!=0.0:
+        V = np.linalg.solve(np.eye(STATE_SIZE)- γ*P_sn, R)
+    elif γ!=1.0:
+        V = np.linalg.solve(np.eye(STATE_SIZE)- γ*P_sn, R)
+    else: # γ==1.0 and T_self_reword==0.0, V[T]=0
+        V[1:-1] = np.linalg.solve(np.eye(STATE_SIZE - 2)- γ*P_sn[1:-1, 1:-1], R[1:-1])
+    return V
 
 if __name__ == "__main__":
-    solution1 = solve_in_place()
-    solution2 = solve_two_array()
-    solution3 = solve_matric()
+    print("Task1:")
+    print("θ\tround inplace\tround two_array\terror inplcae\terror two_array")
+    solution_matric = solve_matric()
+    for m in [1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8]:
+        solution_inplace, round_inplace = solve_in_place(θ=m)
+        solution_two_array, round_two_array = solve_two_array(θ=m)
+        error_inplace = np.max(np.abs(solution_inplace - solution_matric))
+        error_two_array = np.max(np.abs(solution_two_array - solution_matric))
+        print(f"{m}\t{round_inplace}\t{round_two_array}\t{error_inplace:.2e}\t{error_two_array:.2e}")
 
-    print(solution1)
-    print(solution2)
-    print(solution3)
+    print("\nTask2:")
+    γ=0.9
+    solution_matric = solve_matric(γ=γ)
+    solution_inplace, round_inplace = solve_in_place(γ=γ)
+    solution_two_array, round_two_array = solve_two_array(γ=γ)
+    error_inplace = np.max(np.abs(solution_inplace - solution_matric))
+    error_two_array = np.max(np.abs(solution_two_array - solution_matric))
+    print("v inplcae:")
+    print(solution_inplace.reshape(4, 4).tolist())
+    print(f"round inplace: {round_inplace}")
+    print(f"error inplace: {error_inplace}")
+    print("v two_array:")
+    print(solution_two_array.reshape(4, 4).tolist())
+    print(f"round two_array: {round_two_array}")
+    print(f"error two_array: {error_two_array}")
+
+    print("\nTask3:")
+    print("round inplace\t round inplace reverse")
+    θ = 1e-4
+    solution_inplace, round_inplace = solve_in_place(θ=θ)
+    solution_inplace_reverse, round_inplace_reverse = solve_in_place(θ=θ, reverse=True)
+    print(f"{round_inplace}\t{round_inplace_reverse}")
+
+    print("\nTask4:")
+    print("T_self_reword = -1, γ = 1, max_round=10000")
+    print("round inplace < 10000?\tround two_array < 10000?\tv_inplace[1]\tv_inplcae[T]\tv_two_array[1]\tv_two_array[1]\tv_two_array[T]")
+    T_self_reword = -1
+    γ = 1
+    max_round=10000
+    solution_inplace, round_inplace = solve_in_place(γ=γ, T_self_reword=T_self_reword, max_round=max_round)
+    solution_two_array, round_two_array = solve_two_array(γ=γ, T_self_reword=T_self_reword, max_round=max_round)
+    print(f"{round_inplace<10000}\t{round_two_array<10000}\t{solution_inplace[1]}\t{solution_inplace[0]}\t{solution_two_array[1]}\t{solution_two_array[0]}")
+
+    print("T_self_reword = -1, γ = 0.9, max_round=10000")
+    print("round inplace < 10000?\tround two_array < 10000?\tv_inplace[1]\tv_inplcae[T]\tv_two_array[1]\tv_two_array[1]\tv_two_array[T]")
+    T_self_reword = -1
+    γ = 0.9
+    max_round=10000
+    solution_inplace, round_inplace = solve_in_place(γ=γ, T_self_reword=T_self_reword, max_round=max_round)
+    solution_two_array, round_two_array = solve_two_array(γ=γ, T_self_reword=T_self_reword, max_round=max_round)
+    print(f"{round_inplace, round_inplace<10000}\t{round_two_array, round_two_array<10000}\t{solution_inplace[1]}\t{solution_inplace[0]}\t{solution_two_array[1]}\t{solution_two_array[0]}")
+
+    print("\nTask5:")
+    print("T_self_reword = -1, γ = 0.9:")
+    T_self_reword = -1
+    γ = 0.9
+    solution_matric = solve_matric(γ=γ, T_self_reword=T_self_reword)
+    print(solution_matric)
+    print("T_self_reword = -1, γ = 1:")
+    T_self_reword = -1
+    γ = 1
+    solution_matric = solve_matric(γ=γ, T_self_reword=T_self_reword)
+    print(solution_matric)
