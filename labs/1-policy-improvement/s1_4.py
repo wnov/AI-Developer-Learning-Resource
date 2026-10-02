@@ -1,61 +1,67 @@
-"""S1.4 策略改进：题设脚本。
+"""S1.4 策略改进 —— 题设脚本。改下面“题设”里的值，然后运行：python s1_4.py
 
-只做题设里要用的计算（求 v_π、q_π、改策略后的 v_π′ 和差值），不包含要你推的结论。
-
-例子（在仓库根目录运行）：
-    python labs/1-policy-improvement/s1_4.py                      # 默认：等概率随机策略，状态 6 改成向左
-    python labs/1-policy-improvement/s1_4.py --change 6=left 9=up # 同时改多个状态
-    python labs/1-policy-improvement/s1_4.py --change 6=down --q 6 5
-    python labs/1-policy-improvement/s1_4.py --gamma 0.9
+网格（SB 例 4.1），0 和 15 是同一个终止状态 T：
+     0   1   2   3
+     4   5   6   7
+     8   9  10  11
+    12  13  14  15
+每步奖励 −1，走出网格则原地不动。π = 四个动作各 0.25。
 """
-
-import argparse
-import pathlib
-import sys
-
 import numpy as np
 
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
-from rl_lab.gridworld import ACTION_NAMES, GridWorld  # noqa: E402
+# ======== 题设：只改这里 ========
+GAMMA = 1.0
+CHANGES = {6: "left"}   # π′ 相对 π 改动的状态：{状态: 动作}，动作取 "up" "down" "left" "right"
+GREEDY_ALL = False      # True 时忽略 CHANGES，π′ 在每个状态都取 q_π 最大的动作（并列取第一个）
+# ================================
+
+ACTIONS = ["up", "down", "left", "right"]
+MOVES = {"up": (-1, 0), "down": (1, 0), "left": (0, -1), "right": (0, 1)}
+TERMINAL = (0, 15)
 
 
-def parse_changes(items):
-    out = {}
-    for item in items:
-        s, a = item.split("=")
-        out[int(s)] = a
-    return out
+def next_state(s, a):
+    r, c = divmod(s, 4)
+    r2, c2 = r + MOVES[a][0], c + MOVES[a][1]
+    return r2 * 4 + c2 if 0 <= r2 < 4 and 0 <= c2 < 4 else s
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--gamma", type=float, default=1.0)
-    ap.add_argument("--change", nargs="*", default=["6=left"],
-                    help="π′ 相对 π 改动的状态，格式 状态=动作，动作取 up/down/left/right")
-    ap.add_argument("--q", nargs="*", type=int, default=None,
-                    help="打印这些状态的 q_π(s,·)，默认打印被改动的状态")
-    args = ap.parse_args()
-
-    env = GridWorld(gamma=args.gamma)
-    pi = env.uniform_policy()
-    changes = parse_changes(args.change)
-    pi_new = env.policy_with(changes, base=pi)
-
-    v = env.evaluate_exact(pi)
-    q = env.q_from_v(v)
-    v_new = env.evaluate_exact(pi_new)
-
-    print(f"γ = {args.gamma}，π = 等概率随机，π′ 改动：{changes}\n")
-    print("v_π：")
-    env.show(v)
-    for s in (args.q if args.q is not None else changes):
-        qs = "  ".join(f"{ACTION_NAMES[a]} {q[s, a]:.3f}" for a in range(env.nA))
-        print(f"\nq_π({s}, ·)：{qs}    v_π({s}) = {v[s]:.3f}")
-    print("\nv_π′：")
-    env.show(v_new)
-    print("\nd = v_π′ − v_π：")
-    env.show(v_new - v)
+def evaluate(policy):
+    """policy[s] = {动作: 概率}。解 (I − γP_π) v = r_π，T 的值固定为 0。"""
+    P, r = np.zeros((16, 16)), np.zeros(16)
+    for s in range(16):
+        if s in TERMINAL:
+            continue
+        for a, p in policy[s].items():
+            P[s, next_state(s, a)] += p
+            r[s] += p * (-1)
+    idx = [s for s in range(16) if s not in TERMINAL]
+    v = np.zeros(16)
+    v[idx] = np.linalg.solve(np.eye(14) - GAMMA * P[np.ix_(idx, idx)], r[idx])
+    return v
 
 
-if __name__ == "__main__":
-    main()
+def q_of(v, s, a):
+    return -1 + GAMMA * v[next_state(s, a)]
+
+
+def show(name, x):
+    print(name)
+    print(np.round(np.asarray(x).reshape(4, 4), 3), "\n")
+
+
+pi = {s: {a: 0.25 for a in ACTIONS} for s in range(16)}
+v = evaluate(pi)
+
+if GREEDY_ALL:
+    CHANGES = {s: max(ACTIONS, key=lambda a: q_of(v, s, a)) for s in range(16) if s not in TERMINAL}
+pi_new = {s: ({CHANGES[s]: 1.0} if s in CHANGES else pi[s]) for s in range(16)}
+v_new = evaluate(pi_new)
+
+print(f"GAMMA = {GAMMA}，π′ 改动：{CHANGES}\n")
+show("v_π：", v)
+for s in CHANGES:
+    print(f"q_π({s}, ·)：", {a: round(q_of(v, s, a), 3) for a in ACTIONS}, f"  v_π({s}) = {v[s]:.3f}")
+print()
+show("v_π′：", v_new)
+show("d = v_π′ − v_π：", v_new - v)

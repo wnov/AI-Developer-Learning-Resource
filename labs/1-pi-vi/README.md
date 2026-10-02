@@ -5,15 +5,12 @@
 - 资料：SB 4.3 Policy Iteration（书第 80 页，PDF 第 102 页，http://incompleteideas.net/book/RLbook2020.pdf#page=102）、4.4 Value Iteration（书第 82–83 页，PDF 第 104–105 页，http://incompleteideas.net/book/RLbook2020.pdf#page=104）。理论会话 S1.4、S1.5 之后再做。
 - 模式：这是试点的验证模式（见 `plan.md`“协议待改”的 2026-10-01 试点条目），本次是**示范阶段**。我给出需求说明的模板和一个检查项样例，其余由你填写。
 - 硬规则：每个独立检查的**原理和预期值由你给出**，AI 只负责把它写成代码。原理或预期值来自 AI 的检查不算独立。
-- 代码生成：用你平时用的 AI 工具生成，不要用本学习会话，并且在仓库外的沙箱里生成，避免 AI 读到课程上下文、改写 log：
-  1. `tools/sandbox.sh new pi-vi 你的需求说明.md`：在 `~/rl-sandbox/pi-vi/` 建沙箱，里面只有公共环境 `rl_lab/` 和 `SPEC.md`；
-  2. 在沙箱目录里打开 AI 工具生成代码；
-  3. `tools/sandbox.sh collect pi-vi labs/1-pi-vi`：把 AI 写的文件原样复制到 `labs/1-pi-vi/ai/pi-vi/`，你提交并推送。
-- 公共环境：`rl_lab/gridworld.py` 已实现本题的网格世界（转移、奖励、策略表示、精确求 v_π、采样），已和你实验 1 的 `P_sn`、SB 图 4.1 对照过（`python -m rl_lab.check_gridworld`）。需求说明里直接让 AI 用它。注意：AI 的实现如果调用了 `rl_lab` 的 `evaluate_exact`，你的检查再用它就不独立了，改用你实验 1 自己写的 `policy_eval.py`。
+- 代码生成：在本目录（`labs/1-pi-vi/`）里打开 Claude Code，把需求说明交给它，代码就写在本目录，你随时可以看。不要用本学习会话。根目录 CLAUDE.md 顶部的“编码模式”规则会让它只当编码助手，不读课程记录、不写 log。
+- 题设脚本：实验前我会在本目录准备一个独立的短脚本，题设写在文件开头，改一个值就能重跑。AI 的实现不要调用这个脚本里的计算，否则你用它做检查就不独立了。
 
 ## 环境
 
-和实验 1 相同（SB 例 4.1，见 `labs/1-policy-evaluation/README.md`；代码见 `rl_lab/gridworld.py`）：4×4 网格，两个角是同一个终止状态 T，每步奖励 −1，γ = 1。另做一组 γ = 0.9。
+和实验 1 相同（SB 例 4.1，见 `labs/1-policy-evaluation/README.md`）：4×4 网格，两个角是同一个终止状态 T，每步奖励 −1，γ = 1。另做一组 γ = 0.9。
 
 ## 第 1 步：需求说明
 
