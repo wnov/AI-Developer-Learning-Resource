@@ -94,7 +94,7 @@ def q_pi(v, s, a):
     参数：v 是长度 16 的 v_π 数组；s 是状态编号；a 是动作名，例如 "left"。
     返回：一个数。
     """
-    raise NotImplementedError("q_pi 还没写")
+    return REWARD + GAMMA * v[next_state(s, a)]
 
 
 def gain(v, s, a):
@@ -104,7 +104,36 @@ def gain(v, s, a):
 
     参数：a 就是 π′(s)，也就是 π′ 在 s 选的动作。
     """
-    raise NotImplementedError("gain 还没写")
+    return q_pi(v, s, a) - v[s]
+
+
+def greedy(v):
+    """【你来写】贪心策略，SB 式 4.9（书第 79 页，PDF 第 101 页）：
+
+        π′(s) = argmax_a q_π(s, a)
+
+    含义：在每个非终止状态，选 q_π(s, a) 最大的那个动作。
+    参数：v 是长度 16 的 v_π 数组。
+    返回：字典 {s: 动作名}，只包含非终止状态（1 到 14），例如 {1: "left", 2: "left", …}。
+          这个字典可以直接交给 change_policy，得到完整的 π′。
+    平局（几个动作的 q 一样大）：选 ACTIONS 顺序里排在前面的那个。
+          np.argmax 本来就是这样处理平局的，例如状态 6 的“下”和“左”都是 −19，会选“下”。
+    可以用上面你写的 q_pi。
+    """
+    s2a = {}
+    for s in range(N_STATES):
+        if s in TERMINAL:
+            continue
+        best_q_s = None
+        best_s_a = None
+        for a in ACTIONS:
+            s_a = next_state(s, a)
+            q_s_a = REWARD + GAMMA * v[s_a]
+            if best_q_s is None or q_s_a > best_q_s:
+                best_q_s = q_s_a
+                best_s_a = a
+        s2a[s] =best_s_a
+    return s2a
 
 
 def change_policy(pi, changes):
@@ -153,7 +182,94 @@ def problem_2B():
     show("d = v_π′ − v_π：", v_new - v)
 
 
-RUN = [problem_2A, problem_2B]   # 要跑哪些题就放哪些
+def problem_2C():
+    """题 2C：只在状态 6 改成“总是向上”——一个变差的改动。
+
+    场景和前提：
+    - 题设同第 0 部分：π 是等概率随机，每步 r = −1，γ = 1，0 和 15 是终止状态 T。
+    - 对题设的调整：π → π′，π′(6) = 上，其余 15 个状态仍按等概率随机走。
+    - 状态 6 向上一步到状态 2。
+    - 已知（2A 的输出）：q_π(6, 上) = −21，v_π(6) = −20，所以 g(6) = −1。
+    - 已知（2B 推出的关系）：d(6) = g(6) + d(π′ 在 6 下一步到的状态)。
+      2B 里 π′(6) = 左，下一步到 5，所以 d(6) = 1 + d(5)。
+
+    对照 2B：2B 的 g(6) = +1，结果 d(6) = +2.235。
+
+    运行前先写下预测（写在下面的冒号后面），推上来以后再运行：
+    (1) d(6) 是正还是负？
+        你的预测：负
+    (2) |d(6)| 和 2B 的 2.235 比，更大、更小，还是一样？为什么？
+        提示：2B 里 d(6) 等于 “π′ 下从 6 出发、经过 6 的期望次数 × g(6)”。
+        你的预测：更大，我猜经过6的期望次数增加了
+    (3) 其他 13 个非终止状态的 d，符号是什么？有没有例外？
+        你的预测：都是负数，没有例外，因为唯一的奖励来源 是负数
+    """
+    changes = {6: "up"}
+    v = evaluate(PI_RANDOM)
+    v_new = evaluate(change_policy(PI_RANDOM, changes))
+    print(f"g(6) = {gain(v, 6, 'up'):.3f}\n")
+    show("v_π′：", v_new)
+    show("d = v_π′ − v_π：", v_new - v)
+
+
+def problem_2D():
+    """题 2D：同时改两个状态，两个改动都是“变好”的。
+
+    场景和前提：
+    - 题设同第 0 部分：π 是等概率随机，每步 r = −1，γ = 1，0 和 15 是终止状态 T。
+    - 对题设的调整：π → π′，π′(6) = 左、π′(9) = 上，其余 14 个状态仍按等概率随机走。
+      两个改动都会让下一步走到状态 5（6 向左到 5，9 向上到 5）。
+    - 已知：g(6) = q_π(6, 左) − v_π(6) = −19 − (−20) = +1
+            g(9) = q_π(9, 上) − v_π(9) = −19 − (−20) = +1
+      其他状态没改，g = 0。
+    - 单独改一个的结果（脚本会一起打印出来）：
+        只改 6（就是 2B）：d(6) = 2.235
+        只改 9：          d(6) = 1.059
+      两者相加 = 3.294。
+
+    运行前先写下预测：
+    (1) 两个一起改，d 表里有没有负数？为什么？
+        你的预测：没有负数，因为d里面只有正值
+    (2) 两个一起改时的 d(6)，和“分别改再相加”的 3.294 比，更大、更小，还是相等？为什么？
+        提示：d(6) = 1 × (从 6 出发经过 6 的期望次数) + 1 × (从 6 出发经过 9 的期望次数)，
+        这里的“期望次数”是按哪个策略走算出来的？
+        你的预测：相等，按π'走出来的
+    """
+    v = evaluate(PI_RANDOM)
+    for title, changes in [("只改 6", {6: "left"}),
+                           ("只改 9", {9: "up"}),
+                           ("两个一起改", {6: "left", 9: "up"})]:
+        d = evaluate(change_policy(PI_RANDOM, changes)) - v
+        show(f"{title}：d = v_π′ − v_π", d)
+
+
+def problem_2F():
+    """题 2F：所有非终止状态同时改成贪心。
+
+    场景和前提：
+    - 题设同第 0 部分：π 是等概率随机，每步 r = −1，γ = 1，0 和 15 是终止状态 T。
+    - 对题设的调整：π → π′ = greedy(v_π)，14 个非终止状态全部改成贪心动作。
+    - 已推出：贪心保证每个状态 g(s) ≥ 0（最大值 ≥ 平均值），所以由策略改进定理，d(s) ≥ 0 处处成立。
+
+    运行前先写下预测：
+    (1) v_π′(6) 是多少？
+        提示：贪心选的是 q_π 最大的动作，也就是走向 v_π 更大（更接近 0）的邻居。
+        按 π′ 从 6 出发，几步能进 T？每步 −1。
+        你的预测：
+    (2) d(6) = v_π′(6) − v_π(6) 是多少？（v_π(6) = −20）
+        你的预测：
+    (3) 有没有哪个状态 d(s) = 0？
+        你的预测：
+    """
+    v = evaluate(PI_RANDOM)
+    changes = greedy(v)
+    print("π′ 在各状态选的动作：", changes, "\n")
+    v_new = evaluate(change_policy(PI_RANDOM, changes))
+    show("v_π′：", v_new)
+    show("d = v_π′ − v_π：", v_new - v)
+
+
+RUN = [problem_2A, problem_2B, problem_2C, problem_2D, problem_2F]   # 要跑哪些题就放哪些
 
 if __name__ == "__main__":
     for problem in RUN:
