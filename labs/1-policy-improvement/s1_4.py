@@ -127,8 +127,7 @@ def greedy(v):
         best_q_s = None
         best_s_a = None
         for a in ACTIONS:
-            s_a = next_state(s, a)
-            q_s_a = REWARD + GAMMA * v[s_a]
+            q_s_a = q_pi(v, s, a)
             if best_q_s is None or q_s_a > best_q_s:
                 best_q_s = q_s_a
                 best_s_a = a
