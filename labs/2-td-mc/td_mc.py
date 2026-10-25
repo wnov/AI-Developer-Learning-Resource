@@ -38,7 +38,9 @@ RIGHT_END = 6
 GAMMA = 1.0
 
 # 真实值 v_π：A..E 依次是 1/6, 2/6, 3/6, 4/6, 5/6（书第 125 页给出）；终止状态为 0
-V_TRUE = np.array([0, 1, 2, 3, 4, 5, 0]) / 6.0
+# 记号和 SB 一致：小写 v_pi 是真实值（题设决定的固定数，算法看不到，这里只用来打分和出题）；
+# 大写 V 是算法手里的估计表（下面的 V_INIT 和各函数的参数 V）。
+v_pi = np.array([0, 1, 2, 3, 4, 5, 0]) / 6.0
 
 # 初始估计：非终止状态 V = 0.5，终止状态 V = 0（书第 125 页：“initialized to the intermediate value V(s) = 0.5”）
 V_INIT = np.array([0, 0.5, 0.5, 0.5, 0.5, 0.5, 0])
@@ -80,8 +82,8 @@ def returns(rewards, gamma):
 
 
 def rms_error(V):
-    """V 和 V_TRUE 在 5 个非终止状态上的均方根误差（书第 125 页右图的纵轴）。"""
-    return float(np.sqrt(np.mean((V[1:6] - V_TRUE[1:6]) ** 2)))
+    """估计表 V 和真实值 v_pi 在 5 个非终止状态上的均方根误差（书第 125 页右图的纵轴）。"""
+    return float(np.sqrt(np.mean((V[1:6] - v_pi[1:6]) ** 2)))
 
 
 # =====================================================================
@@ -100,7 +102,7 @@ def td_target(V, r, s_next, gamma):
       gamma   折扣 γ
     返回：一个数。
     """
-    raise NotImplementedError("【你来写】td_target")
+    return r + gamma * V[s_next]
 
 
 def td0_episode(V, states, rewards, alpha, gamma):
@@ -122,7 +124,10 @@ def td0_episode(V, states, rewards, alpha, gamma):
       gamma    折扣 γ
     返回：None（结果就在 V 里）。
     """
-    raise NotImplementedError("【你来写】td0_episode")
+    for i, state in enumerate(states[:-1]):
+        reward = rewards[i]
+        s_next = states[i+1]
+        V[state] = V[state] + alpha * (reward + gamma * V[s_next] - V[state])
 
 
 def mc_episode(V, states, rewards, alpha, gamma):
@@ -136,8 +141,12 @@ def mc_episode(V, states, rewards, alpha, gamma):
 
     参数和返回：同 td0_episode。
     """
-    raise NotImplementedError("【你来写】mc_episode")
-
+    G_t = 0
+    state_reversed = states[::-1]
+    rewards_reversed = rewards[::-1]
+    for i, state in enumerate(state_reversed[1:]):
+        G_t = rewards_reversed[i] + gamma * G_t
+        V[state] = V[state] + alpha * (G_t - V[state])
 
 # =====================================================================
 # 外围代码（我写的）：多局、多次重复、画图
@@ -217,12 +226,12 @@ def problem_B():
 
     运行前先写下预测：
     (1) 前 20 局：TD（α=0.1）和 MC（α=0.02）哪条曲线降得快？
-        你的预测：
+        你的预测：TD下降快
     (2) 第 100 局：两者谁的误差低？
-        你的预测：
+        你的预测：MC误差低
     (3) 同一种方法，α 大一些（比如 TD 的 0.15 对 0.05），曲线前段和后段各有什么不同？为什么？
         提示：α 大 = 每次往目标挪得多，目标本身有噪声时会怎样？
-        你的预测：
+        你的预测：α越大，前段收敛越快，后段波动越大
     """
     settings = [("TD", a) for a in (0.05, 0.1, 0.15)] + [("MC", a) for a in (0.01, 0.02, 0.03, 0.04)]
     os.makedirs(IMG_DIR, exist_ok=True)
@@ -246,29 +255,41 @@ def problem_B():
 
 
 def problem_C():
-    """题 C：TD 目标和 MC 目标，噪声各有多大？V 不准时又会怎样？
+    """题 C：MC 和 TD 给 V(C) 的“参考答案”，离正确答案有多远？
 
-    在练什么：把“MC 只有采样误差、TD 还有 V 不准的误差”量化成方差和偏差两个数。
-    这就是单元 4 里 GAE 的 λ 在权衡的东西（当时两条理由的机制没说对，这题用数字看清楚）。
+    在练什么：看清两种方法各自错在哪里——MC 每局的参考答案很吵，但平均是对的；
+    TD 的参考答案安静，但表不准时会一直偏。GAE 的 λ 就是在这两种毛病之间调（单元 4 的小题）。
 
-    场景和前提：
-    - 题设同第 0 部分。对题设的调整：不更新 V，只看从 C 出发时两种目标的取值。
-    - 跑 20000 局。每局记下：MC 目标 G_0；TD 目标 R_1 + γ V(S_1)（用 td_target 算）。
-    - 两种 V 表：
-      · 情况 1：V = 真实值 V_TRUE（V(B) = 2/6，V(D) = 4/6）
-      · 情况 2：V(B)、V(D) 被高估成 0.8，其余仍是真实值
-    - 真实值 v_π(C) = 0.5。偏差 = 目标的平均 − 0.5。
+    题设（同第 0 部分，这里重述）：
+    - γ = 1。每局从 C 出发，每步向左、向右各 1/2；只有走进右端的那一步 r = +1，其余每一步 r = 0。
+    - 我们想估计 v_pi(C)，正确答案是 0.5。
 
-    运行前先写下预测（可以手算，这题每个数都能算出来）：
-    (1) 情况 1：MC 目标只有哪两种取值？平均、方差各是多少？TD 目标只有哪两种取值？平均、方差各是多少？
-        提示：只取两个值、各 1/2 概率时，方差 = (两值之差 / 2)²。
+    “参考答案”是什么：每跑完一局，两种方法都会拿一个数去更新 V(C)（式 6.1、6.2 方括号里减号前面那一项）：
+    - MC：这一局从右端结束就给 1，从左端结束就给 0（就是 G_0，和 V 表无关）。
+    - TD：只看第一步走到哪一格，走到 B 就给表里的 V(B)，走到 D 就给 V(D)（就是 R_1 + γV(S_1)，这一步 R_1 = 0）。
+
+    这题不更新 V，只看这些参考答案。两种 V 表（环境不变，只改 TD 要查的表）：
+    - 情况 1：表是准的，V(B) = 2/6，V(D) = 4/6。
+    - 情况 2：表在 B、D 不准，V(B) = V(D) = 0.8。
+
+    运行前先写下预测（先手算 4 局，再推广）：
+          局   轨迹                          MC 参考答案   TD 参考答案（情况 1）
+          1    C → D → E → 右端               1            V(D) = 4/6
+          2    C → B → A → 左端               0            V(B) = 2/6
+          3    C → D → C → B → A → 左端       0            V(D) = 4/6
+          4    C → B → C → D → E → 右端       1            V(B) = 2/6
+    (1) 情况 1：每一局里，MC 的参考答案离 0.5 差多少？TD 的呢？
         你的预测：
-    (2) 情况 2：MC 目标的平均和方差变不变？TD 目标的平均和方差各是多少，偏差多大？
+    (2) 情况 2：这 4 局里 MC 那一列变不变？TD 那一列变成什么，每局离 0.5 差多少？
         你的预测：
-    (3) 用这两组数，一句话说清：V 不准时为什么 λ 接近 1 更稳；每步都随机时为什么 λ 接近 0 更稳。
+    (3) 程序会跑 20000 局，打印每种参考答案的“平均”“偏差 = 平均 − 0.5”“方差”。
+        方差 = 每局“离平均差多少”的平方，再取平均。按你 (1)(2) 的数，猜四个方差各是多少：
+        情况 1 的 MC、TD；情况 2 的 MC、TD。
+        你的预测：
+    (4) 一句话：V 表不准时，λ 接近 1（MC 那头）为什么更稳？每步都很随机时，λ 接近 0（TD 那头）为什么更稳？
         你的预测：
     """
-    cases = {"情况 1（V 准）": V_TRUE.copy(), "情况 2（V(B)、V(D) 高估成 0.8）": V_TRUE.copy()}
+    cases = {"情况 1（V 准）": v_pi.copy(), "情况 2（V(B)、V(D) 高估成 0.8）": v_pi.copy()}
     cases["情况 2（V(B)、V(D) 高估成 0.8）"][[2, 4]] = 0.8
     rng = np.random.default_rng(0)
     episodes = [generate_episode(rng) for _ in range(20000)]
