@@ -1,0 +1,352 @@
+<title>随机游走上的参考答案</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;600&family=Noto+Serif+SC:wght@600&display=swap">
+<style>
+:root{
+  --bg:#F3F5F7; --panel:#FFFFFF; --ink:#18202C; --muted:#5A6577; --rule:#D5DBE3;
+  --td:#2563C9; --td-soft:#DFE8F8; --mc:#C2412E; --mc-soft:#F7E2DD; --truth:#1E7A54;
+  --token:#18202C; --node:#FFFFFF; --term:#E4E8EE;
+  --sans:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --serif:"Noto Serif SC","Songti SC",serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0F1318; --panel:#171C23; --ink:#E5E9F0; --muted:#98A2B2; --rule:#2B323D;
+    --td:#7FAAF6; --td-soft:#1C2A42; --mc:#EF8B79; --mc-soft:#3A2420; --truth:#5BC79B;
+    --token:#E5E9F0; --node:#1E242D; --term:#252C36;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0F1318; --panel:#171C23; --ink:#E5E9F0; --muted:#98A2B2; --rule:#2B323D;
+  --td:#7FAAF6; --td-soft:#1C2A42; --mc:#EF8B79; --mc-soft:#3A2420; --truth:#5BC79B;
+  --token:#E5E9F0; --node:#1E242D; --term:#252C36;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.7}
+.wrap{max-width:780px;margin:0 auto;padding:28px 18px 56px;display:flex;flex-direction:column;gap:22px}
+h1{font-family:var(--serif);font-size:1.75rem;line-height:1.3;margin:0;text-wrap:balance}
+h2{font-family:var(--serif);font-size:1.18rem;margin:0;text-wrap:balance}
+p{margin:0}
+.eyebrow{font-size:.78rem;letter-spacing:.06em;color:var(--muted)}
+.lead{color:var(--muted);max-width:62ch}
+section{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:18px 18px 20px;display:flex;flex-direction:column;gap:14px}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.td{color:var(--td)} .mc{color:var(--mc)} .truth{color:var(--truth)}
+.chain{width:100%;overflow-x:auto}
+.chain svg{display:block;width:100%;min-width:520px;height:auto}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button{font:inherit;font-size:.92rem;padding:7px 14px;border-radius:7px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--muted)}
+button:focus-visible{outline:2px solid var(--td);outline-offset:2px}
+button.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button[aria-pressed="true"]{background:var(--td-soft);border-color:var(--td);color:var(--ink)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.label{font-size:.82rem;color:var(--muted)}
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.answer{border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+.answer.mcbox{background:var(--mc-soft)} .answer.tdbox{background:var(--td-soft)}
+.answer .big{font-family:var(--mono);font-size:1.5rem;font-weight:500;line-height:1.3}
+.answer .why{font-size:.85rem;color:var(--muted)}
+.coins{font-family:var(--mono);font-size:.9rem;color:var(--muted);min-height:1.6em;word-break:break-all}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{padding:6px 8px;border-bottom:1px solid var(--rule);text-align:left;white-space:nowrap}
+th{font-weight:600;color:var(--muted);font-size:.8rem}
+td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.gate{border:1px dashed var(--rule);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.dist{display:flex;flex-direction:column;gap:8px}
+.bar{display:grid;grid-template-columns:4.2em 1fr 3.6em;gap:8px;align-items:center;font-size:.85rem}
+.bar .track{height:14px;background:var(--term);border-radius:3px;overflow:hidden}
+.bar .fill{height:100%}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:.88rem}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.note{font-size:.85rem;color:var(--muted)}
+ul.plain{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
+footer{font-size:.8rem;color:var(--muted)}
+@media (max-width:560px){
+  .answers,.stats{grid-template-columns:1fr}
+  h1{font-size:1.45rem}
+}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <span class="eyebrow">实验 3 · 题 C 配套 · SB 例 6.2（书第 125 页）</span>
+    <h1>随机游走上的参考答案</h1>
+    <p class="lead">我们想估计 <span class="truth">v<sub>π</sub>(C) = 0.5</span>。每跑完一局，MC 和 TD 都会拿一个数去更新 V(C)，这个数就是这一局给出的“参考答案”（式 6.1、6.2 方括号里减号前面那一项）。这一页让你一局一局地看：两种参考答案分别从哪里来，离 0.5 有多远。</p>
+  </header>
+
+  <section aria-labelledby="setup-h">
+    <h2 id="setup-h">题设和两张表</h2>
+    <p class="note">γ = 1。每局从 C 出发，每一步抛一次硬币：正面向右，反面向左，各 1/2。只有走进右端的那一步奖励 +1，其余每一步都是 0。<br>
+      图上方的 <b>V</b> 是算法手里的估计表（TD 要查它），下方的 <span class="truth"><b>v<sub>π</sub></b></span> 是真实值（算法看不到）。</p>
+    <div class="controls" role="group" aria-label="选择估计表 V">
+      <span class="label">估计表 V：</span>
+      <button id="preset-true" data-preset="true" aria-pressed="true">表是准的（V = v<sub>π</sub>）</button>
+      <button id="preset-high" data-preset="high" aria-pressed="false">B、D 高估成 0.8</button>
+      <button id="preset-init" data-preset="init" aria-pressed="false">全是 0.5（初始表）</button>
+    </div>
+    <div class="chain"><svg id="chain" viewBox="0 0 700 170" role="img" aria-label="随机游走链：左端、A、B、C、D、E、右端"></svg></div>
+  </section>
+
+  <section aria-labelledby="play-h">
+    <h2 id="play-h">一局一局地看</h2>
+    <div class="controls">
+      <button id="btn-step" class="primary">走一步</button>
+      <button id="btn-finish">走完这一局</button>
+      <button id="btn-new">新的一局</button>
+    </div>
+    <div>
+      <div class="label">这一局的硬币和轨迹</div>
+      <div class="coins" id="coins">C</div>
+    </div>
+    <div class="answers">
+      <div class="answer mcbox">
+        <span class="label mc">MC 的参考答案 = G<sub>0</sub></span>
+        <span class="big mc" id="mc-val">等这一局结束…</span>
+        <span class="why" id="mc-why">要等这一局结束，看从哪一端出去：右端给 1，左端给 0。不查表。</span>
+      </div>
+      <div class="answer tdbox">
+        <span class="label td">TD 的参考答案 = R<sub>1</sub> + γV(S<sub>1</sub>)</span>
+        <span class="big td" id="td-val">等第一步…</span>
+        <span class="why" id="td-why">只看第一步走到 B 还是 D，然后查表。</span>
+      </div>
+    </div>
+    <div>
+      <div class="label">最近的几局（切换上面的估计表，看哪一列会变）</div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>局</th><th>轨迹</th><th class="mc">MC 参考答案</th><th class="mc">离 0.5</th><th class="td">TD 参考答案</th><th class="td">离 0.5</th></tr></thead>
+          <tbody id="hist"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="many-h">
+    <h2 id="many-h">很多局之后</h2>
+    <div class="gate" id="gate-many">
+      <p>先在 <code>td_mc.py</code> 的题 C 里写好预测 (1)–(3)，再点开这一部分。下面的数字就是题 C 的答案。</p>
+      <div class="controls"><button id="open-many">我已经写好预测，展开</button></div>
+    </div>
+    <div id="many" hidden style="display:flex;flex-direction:column;gap:14px">
+      <div class="controls">
+        <button id="run-1000" class="primary">再跑 1000 局</button>
+        <button id="run-reset">清空重来</button>
+        <span class="label" id="many-count">已跑 0 局</span>
+      </div>
+      <div class="stats">
+        <div class="dist">
+          <span class="label mc">MC 参考答案的分布</span>
+          <div id="mc-dist"></div>
+          <dl class="kv" id="mc-kv"></dl>
+        </div>
+        <div class="dist">
+          <span class="label td">TD 参考答案的分布</span>
+          <div id="td-dist"></div>
+          <dl class="kv" id="td-kv"></dl>
+        </div>
+      </div>
+      <p class="note">偏差 = 平均 − 0.5；方差 = 每局“离平均差多少”的平方再取平均。切换上面的估计表，看哪一边的数字会变。</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="review-h">
+    <h2 id="review-h">课后复习</h2>
+    <div class="gate" id="gate-review">
+      <p>做完题 C 第 (4) 问再展开：这一段是本题的结论，以及它和 GAE 的 λ 的关系。</p>
+      <div class="controls"><button id="open-review">我已经答完第 (4) 问，展开</button></div>
+    </div>
+    <div id="review" hidden>
+      <ul class="plain">
+        <li><b class="mc">MC</b>：参考答案就是这一局的结局，取决于这一局<b>每一次</b>硬币，所以很吵（表准时方差 0.25，是 TD 的 9 倍）。但它<b>不查表</b>，表准不准都不影响它，平均始终是 0.5，没有偏差。</li>
+        <li><b class="td">TD</b>：参考答案只取决于<b>第一次</b>硬币，后面所有硬币的影响被 V(B) 或 V(D) 这一个数顶替了，所以安静（方差 1/36 ≈ 0.028）。代价是：表一旦不准，它就带着这个偏差，表高估多少，参考答案就偏多少（B、D 高估成 0.8 时，偏差是 +0.3）。</li>
+        <li><b>GAE 的 λ</b>（GAE 论文第 5 页式 16–18）：λ = 1 一头就是 MC，λ = 0 一头就是 TD。critic 不准时往 λ = 1 靠，随机性大、轨迹又长时往 λ = 0 靠。PPO 常用 λ ≈ 0.95，在两头之间折中（这个常用值是资料外）。</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>出处：SB 第 2 版例 6.2（书第 125 页）、式 6.1（第 119 页）、式 6.2（第 120 页）；Schulman et al. 2016 GAE 第 5 页。数字和 <code>labs/2-td-mc/td_mc.py</code> 的题 C 一致。</footer>
+</div>
+
+<script>
+(function(){
+  var NAMES=["左端","A","B","C","D","E","右端"];
+  var VPI=[0,1/6,2/6,3/6,4/6,5/6,0];
+  var PRESETS={
+    "true":VPI.slice(),
+    "high":[0,1/6,0.8,3/6,0.8,5/6,0],
+    "init":[0,0.5,0.5,0.5,0.5,0.5,0]
+  };
+  var V=PRESETS["true"].slice();
+  var FRAC={0:"0",1:"1/6",2:"2/6",3:"3/6",4:"4/6",5:"5/6"};
+
+  // 可复现的随机数（mulberry32）
+  function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;var t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+  var rand=rng(20261025);
+
+  function fmt(x){
+    for(var k=0;k<=6;k++){if(Math.abs(x-k/6)<1e-9 && k>0 && k<6)return k+"/6 ≈ "+x.toFixed(3);}
+    return (Math.round(x*1000)/1000).toString();
+  }
+  function fmt3(x){return x.toFixed(3);}
+
+  // ---------- 链 ----------
+  var svg=document.getElementById("chain");
+  var X=[40,140,240,340,440,540,640];
+  var ep={states:[3],done:false};
+  function drawChain(){
+    var cs=getComputedStyle(document.documentElement);
+    var ink=cs.getPropertyValue("--ink"),muted=cs.getPropertyValue("--muted"),rule=cs.getPropertyValue("--rule"),
+        node=cs.getPropertyValue("--node"),term=cs.getPropertyValue("--term"),truth=cs.getPropertyValue("--truth"),
+        td=cs.getPropertyValue("--td"),tdsoft=cs.getPropertyValue("--td-soft"),token=cs.getPropertyValue("--token");
+    var h="";
+    var y=92;
+    // 边
+    for(var i=0;i<6;i++){
+      var r=(i===5)?"+1":"0";
+      h+='<line x1="'+(X[i]+22)+'" y1="'+y+'" x2="'+(X[i+1]-22)+'" y2="'+y+'" stroke="'+rule+'" stroke-width="2"/>';
+      h+='<text x="'+((X[i]+X[i+1])/2)+'" y="'+(y-8)+'" text-anchor="middle" font-size="11" fill="'+muted+'" font-family="IBM Plex Mono,monospace">'+r+'</text>';
+    }
+    var s1=ep.states.length>1?ep.states[1]:-1;
+    var cur=ep.states[ep.states.length-1];
+    for(var s=0;s<7;s++){
+      var isT=(s===0||s===6);
+      var hl=(s===s1);
+      if(isT){
+        h+='<rect x="'+(X[s]-20)+'" y="'+(y-18)+'" width="40" height="36" rx="4" fill="'+term+'" stroke="'+rule+'"/>';
+      }else{
+        h+='<circle cx="'+X[s]+'" cy="'+y+'" r="20" fill="'+(hl?tdsoft:node)+'" stroke="'+(hl?td:rule)+'" stroke-width="'+(hl?2.5:1.5)+'"/>';
+      }
+      h+='<text x="'+X[s]+'" y="'+(y+5)+'" text-anchor="middle" font-size="'+(isT?11:14)+'" fill="'+ink+'" font-weight="600">'+NAMES[s]+'</text>';
+      if(!isT){
+        h+='<text x="'+X[s]+'" y="'+(y-34)+'" text-anchor="middle" font-size="12" fill="'+(hl?td:ink)+'" font-family="IBM Plex Mono,monospace">V='+(Math.round(V[s]*1000)/1000)+'</text>';
+        h+='<text x="'+X[s]+'" y="'+(y+42)+'" text-anchor="middle" font-size="12" fill="'+truth+'" font-family="IBM Plex Mono,monospace">vπ='+FRAC[s]+'</text>';
+      }
+    }
+    // 当前位置
+    h+='<circle cx="'+X[cur]+'" cy="'+(y+62)+'" r="6" fill="'+token+'"/>';
+    h+='<text x="'+(X[cur]+12)+'" y="'+(y+66)+'" font-size="11" fill="'+muted+'">现在在这里</text>';
+    h+='<text x="8" y="'+(y-34)+'" font-size="10" fill="'+muted+'">估计</text>';
+    h+='<text x="8" y="'+(y+42)+'" font-size="10" fill="'+truth+'">真实</text>';
+    svg.innerHTML=h;
+  }
+
+  // ---------- 一局 ----------
+  var history=[];
+  function trajText(states){return states.map(function(s){return NAMES[s];}).join(" → ");}
+  function coinText(states){
+    var c=[];for(var i=1;i<states.length;i++){c.push(states[i]>states[i-1]?"右":"左");}
+    return c.length?("硬币："+c.join(" ")+"　｜　"+trajText(states)):trajText(states);
+  }
+  function tdLabel(s1){return 0+1*V[s1];}   // R_1 = 0（从 C 一步到不了终点），γ = 1
+  function render(){
+    document.getElementById("coins").textContent=coinText(ep.states);
+    var s1=ep.states.length>1?ep.states[1]:null;
+    var tdv=document.getElementById("td-val"),tdw=document.getElementById("td-why");
+    if(s1===null){tdv.textContent="等第一步…";tdw.textContent="只看第一步走到 B 还是 D，然后查表。";}
+    else{tdv.textContent=fmt(tdLabel(s1));tdw.textContent="第一步走到 "+NAMES[s1]+"：0 + V("+NAMES[s1]+")。第一步一走完，TD 的参考答案就定了，后面怎么走都不再影响它。";}
+    var mcv=document.getElementById("mc-val"),mcw=document.getElementById("mc-why");
+    if(!ep.done){mcv.textContent="等这一局结束…";mcw.textContent="要等这一局结束，看从哪一端出去：右端给 1，左端给 0。不查表。";}
+    else{var end=ep.states[ep.states.length-1];mcv.textContent=(end===6?"1":"0");mcw.textContent="从"+NAMES[end]+"出去，回报 G₀ = "+(end===6?"1":"0")+"。中间每一次硬币都可能改变这个结局。";}
+    var tb=document.getElementById("hist");var rows="";
+    for(var i=history.length-1;i>=Math.max(0,history.length-8);i--){
+      var e=history[i];var t=tdLabel(e.s1);
+      rows+='<tr><td class="n">'+(i+1)+'</td><td>'+trajText(e.states)+'</td><td class="n mc">'+e.mc+'</td><td class="n mc">'+fmt3(Math.abs(e.mc-0.5))+'</td><td class="n td">'+fmt3(t)+'</td><td class="n td">'+fmt3(Math.abs(t-0.5))+'</td></tr>';
+    }
+    tb.innerHTML=rows||'<tr><td colspan="6" class="note">走完一局后，这里会记下它。</td></tr>';
+    drawChain();
+  }
+  function step(){
+    if(ep.done)return;
+    var s=ep.states[ep.states.length-1];
+    var s2=s+(rand()<0.5?1:-1);
+    ep.states.push(s2);
+    if(s2===0||s2===6){
+      ep.done=true;
+      history.push({states:ep.states.slice(),s1:ep.states[1],mc:(s2===6?1:0)});
+    }
+    render();
+  }
+  document.getElementById("btn-step").addEventListener("click",step);
+  document.getElementById("btn-finish").addEventListener("click",function(){var g=0;while(!ep.done&&g++<10000)step();});
+  document.getElementById("btn-new").addEventListener("click",function(){
+    if(!ep.done){var g=0;while(!ep.done&&g++<10000)step();}
+    ep={states:[3],done:false};render();
+  });
+
+  // ---------- 估计表 ----------
+  var presetBtns=document.querySelectorAll("[data-preset]");
+  presetBtns.forEach(function(b){b.addEventListener("click",function(){
+    V=PRESETS[b.getAttribute("data-preset")].slice();
+    presetBtns.forEach(function(o){o.setAttribute("aria-pressed",o===b?"true":"false");});
+    render();renderMany();
+  });});
+
+  // ---------- 很多局 ----------
+  var bulk=[]; // 每局存 {s1, mc}
+  var brand=rng(7);
+  function runBulk(n){
+    for(var k=0;k<n;k++){
+      var s=3,s1=null;
+      while(s!==0&&s!==6){s=s+(brand()<0.5?1:-1);if(s1===null)s1=s;}
+      bulk.push({s1:s1,mc:(s===6?1:0)});
+    }
+  }
+  function statsOf(arr){
+    var n=arr.length;if(!n)return null;
+    var m=arr.reduce(function(a,b){return a+b;},0)/n;
+    var v=arr.reduce(function(a,b){return a+(b-m)*(b-m);},0)/n;
+    var counts={};arr.forEach(function(x){var k=(Math.round(x*10000)/10000).toString();counts[k]=(counts[k]||0)+1;});
+    return {n:n,mean:m,var:v,counts:counts};
+  }
+  function distHTML(st,color){
+    var keys=Object.keys(st.counts).sort(function(a,b){return parseFloat(a)-parseFloat(b);});
+    return keys.map(function(k){
+      var p=st.counts[k]/st.n;
+      return '<div class="bar"><span class="num">'+fmt3(parseFloat(k))+'</span><span class="track"><span class="fill" style="display:block;width:'+(p*100).toFixed(1)+'%;background:var('+color+')"></span></span><span class="num">'+(p*100).toFixed(1)+'%</span></div>';
+    }).join("");
+  }
+  function kvHTML(st){
+    return '<dt>平均</dt><dd>'+st.mean.toFixed(4)+'</dd><dt>偏差</dt><dd>'+((st.mean-0.5)>=0?"+":"")+(st.mean-0.5).toFixed(4)+'</dd><dt>方差</dt><dd>'+st.var.toFixed(4)+'</dd>';
+  }
+  function renderMany(){
+    var box=document.getElementById("many");if(box.hidden)return;
+    document.getElementById("many-count").textContent="已跑 "+bulk.length+" 局";
+    var mc=statsOf(bulk.map(function(e){return e.mc;}));
+    var td=statsOf(bulk.map(function(e){return tdLabel(e.s1);}));
+    document.getElementById("mc-dist").innerHTML=mc?distHTML(mc,"--mc"):'<span class="note">还没有数据</span>';
+    document.getElementById("td-dist").innerHTML=td?distHTML(td,"--td"):'<span class="note">还没有数据</span>';
+    document.getElementById("mc-kv").innerHTML=mc?kvHTML(mc):"";
+    document.getElementById("td-kv").innerHTML=td?kvHTML(td):"";
+  }
+  document.getElementById("run-1000").addEventListener("click",function(){runBulk(1000);renderMany();});
+  document.getElementById("run-reset").addEventListener("click",function(){bulk=[];renderMany();});
+
+  // ---------- 闸门 ----------
+  function store(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+  function load(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+  function openMany(){document.getElementById("gate-many").hidden=true;var b=document.getElementById("many");b.hidden=false;if(!bulk.length)runBulk(1000);renderMany();store("viz-tdmc-many","1");}
+  function openReview(){document.getElementById("gate-review").hidden=true;document.getElementById("review").hidden=false;store("viz-tdmc-review","1");}
+  document.getElementById("open-many").addEventListener("click",openMany);
+  document.getElementById("open-review").addEventListener("click",openReview);
+  if(load("viz-tdmc-many")==="1")openMany();
+  if(load("viz-tdmc-review")==="1")openReview();
+
+  // 主题切换时重画 SVG
+  try{window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change",drawChain);}catch(e){}
+  new MutationObserver(drawChain).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+
+  // 开场：示例状态——已走完一局，便于第一眼看到页面在做什么
+  var g=0;while(!ep.done&&g++<10000)step();
+  ep={states:[3],done:false};
+  step();
+})();
+</script>
